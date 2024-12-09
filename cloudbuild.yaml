@@ -2,25 +2,34 @@ steps:
   # Build the container image
   - name: 'gcr.io/cloud-builders/docker'
     args: ['build', '-t', 'gcr.io/$PROJECT_ID/stripe-webhook-handler', '.']
-  
+
   # Push the container image to Container Registry
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'gcr.io/$PROJECT_ID/stripe-webhook-handler']
-  
+
   # Deploy container image to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
-    - 'run'
-    - 'deploy'
-    - 'stripe-webhook-handler'
-    - '--image'
-    - 'gcr.io/$PROJECT_ID/stripe-webhook-handler'
-    - '--region'
-    - 'australia-southeast1'
-    - '--platform'
-    - 'managed'
-    - '--allow-unauthenticated'
+      - 'run'
+      - 'deploy'
+      - 'stripe-webhook-handler'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/stripe-webhook-handler'
+      - '--region'
+      - 'australia-southeast1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--set-env-vars'
+      - 'STRIPE_SECRET_KEY=${_STRIPE_SECRET_KEY},STRIPE_CONNECT_WEBHOOK_SECRET=${_STRIPE_CONNECT_WEBHOOK_SECRET}'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+substitutions:
+  _STRIPE_SECRET_KEY: '' # Will be provided by trigger
+  _STRIPE_CONNECT_WEBHOOK_SECRET: '' # Will be provided by trigger
 
 images:
   - 'gcr.io/$PROJECT_ID/stripe-webhook-handler'
